@@ -1,0 +1,43 @@
+---
+
+- name: Designate-manage Comands
+  hosts: Controller[0]
+  become: true
+  tasks:
+  - name: Database Sync
+    command: "designate-manage database sync"
+  - name: Pool-Manager sync
+    command: "designate-manage pool-manager-cache sync" 
+
+- name: Enable Designate systemd
+  hosts: Controller
+  become: true
+  tasks:
+  - name: designate-central
+    systemd:
+     name: designate-central.service
+     state: restarted
+     enabled: yes
+  - name: designate-api
+    systemd:
+      name: designate-api.service
+      state: restarted
+      enabled: yes
+  - name: designate-mdns
+    systemd:
+      name: designate-mdns.service
+      state: restarted
+      enabled: yes
+  - name: designate-worker
+    systemd:
+      name: designate-worker.service
+      state: restarted
+      enabled: yes
+
+- name: Designate-manage Pool Update
+  hosts: Controller[0]
+  become: true
+  tasks:
+  - name: Pool Manager update
+    command: "designate-manage pool update"
+

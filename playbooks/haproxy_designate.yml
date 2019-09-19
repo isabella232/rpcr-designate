@@ -1,0 +1,40 @@
+---
+
+- name: Add designate services to HAProxy config
+  hosts: Controller
+  tasks:
+    - name: Remove current designate service entries
+      blockinfile:
+        path: /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
+        block: ''
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.service.haproxy_service_name }}"
+      with_items: "{{ designate_haproxy_service_configs }}"
+
+    - name: Add new designate service entries
+      blockinfile:
+        path: /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
+        block: |
+          listen {{ item.service.haproxy_service_name }}
+            bind {{ external_lb_vip}}:{{ item.service.haproxy_port }} transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem
+            bind {{ internal_lb_vip}}:{{ item.service.haproxy_port }} transparent
+            mode {{ item.service.haproxy_balance_type }}
+            http-request set-header X-Forwarded-Proto https if { ssl_fc }
+            http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+          {% for option in item.service.haproxy_backend_options %}
+            option {{ option }}
+           redirect scheme https code 301 if { hdr(host) -i {{ external_lb_vip }} } !{ ssl_fc }
+           rsprep ^Location:\ http://(.*) Location:\ https://\1
+          {% endfor %}
+          {% for controller_ip in item.service.haproxy_backend_nodes_map %}
+            server {{ item.service.haproxy_backend_nodes_map[controller_ip].host }} {{ item.service.haproxy_backend_nodes_map[controller_ip].ip }}:{{ item.service.haproxy_backend_port }} check fall 5 inter 2000 rise 2
+          {% endfor %}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.service.haproxy_service_name }}"
+      with_items: "{{ designate_haproxy_service_configs }}"
+  become: yes
+      
+- name: Restart the HAProxy containers via Pacemaker
+  hosts: Controller[0]
+  tasks:
+    - name: Cycle HAProxy
+      shell: pcs resource restart haproxy-bundle
+  become: yes

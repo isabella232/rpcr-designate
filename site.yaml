@@ -1,0 +1,25 @@
+---
+
+- include: playbooks/iptables_rules.yml
+  tags: designate_iptables
+
+- include: playbooks/install_pkgs.yml
+  tags: designate_packages
+
+- include: playbooks/config_designate.yml
+  tags: configure_designate
+
+- include: playbooks/designate_db.yml
+  tags: designate_db
+
+- include: playbooks/config_named.yml
+  tags: configure_named
+
+- include: playbooks/openstack_designate.yml
+  tags:  designate_openstack_cmds
+
+- include: playbooks/haproxy_designate.yml
+  tags: designate_haproxy
+
+- include: playbooks/enable_service.yml
+  tags: enable_services

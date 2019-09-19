@@ -1,0 +1,23 @@
+---
+- name: Install Designate and Bind Packages
+  hosts: Controller
+  become: yes    
+  tasks:
+  - name: Package Install
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - "openstack-designate-api"
+      - "openstack-designate-central"
+      - "openstack-designate-sink"
+      - "openstack-designate-worker"
+      - "openstack-designate-mdns" 
+      - "openstack-designate-common" 
+      - "python-designate"
+      - "python-designateclient" 
+      - "openstack-designate-agent"
+      - "bind"
+      - "bind-utils"
+
+

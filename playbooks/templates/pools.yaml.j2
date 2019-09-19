@@ -1,0 +1,74 @@
+- name: default
+  description: Default BIND Pool
+
+  ns_records:
+    - hostname: "{{controller_routes.controller01.ns }}."
+      priority: 1
+    - hostname: "{{controller_routes.controller02.ns }}."
+      priority: 2
+    - hostname: "{{controller_routes.controller03.ns }}."
+      priority: 3
+
+  nameservers:
+    - host: {{ controller_routes.controller01.ip }}
+      port: 53
+    - host: {{ controller_routes.controller02.ip }}
+      port: 53
+    - host: {{ controller_routes.controller03.ip }}
+      port: 53
+
+  targets:
+    - type: bind9
+      description: Controller01 BIND Server
+
+      masters:
+        - host: {{ controller_routes.controller01.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller02.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller03.ip }}
+          port: 5354
+
+      options:
+         host: {{ controller_routes.controller01.ip }}
+         port: 53
+         rndc_host: {{ controller_routes.controller01.ip }}
+         rndc_port: 953
+         rndc_key_file: /etc/rndc.key
+
+    - type: bind9
+      description: Controller02 BIND Server
+
+      masters:
+        - host: {{ controller_routes.controller01.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller02.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller03.ip }}
+          port: 5354
+
+      options:
+         host: {{ controller_routes.controller02.ip }}
+         port: 53
+         rndc_host: {{ controller_routes.controller02.ip }}
+         rndc_port: 953
+         rndc_key_file: /etc/rndc.key
+
+    - type: bind9
+      description: Controller03 BIND Server
+
+      masters:
+        - host: {{ controller_routes.controller01.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller02.ip }}
+          port: 5354
+        - host: {{ controller_routes.controller03.ip }}
+          port: 5354
+
+      options:
+         host: {{ controller_routes.controller03.ip }}
+         port: 53
+         rndc_host: {{ controller_routes.controller03.ip }}
+         rndc_port: 953
+         rndc_key_file: /etc/rndc.key
+

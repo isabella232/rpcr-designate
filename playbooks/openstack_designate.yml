@@ -1,0 +1,17 @@
+---
+- name: Configure OpenStack environment from undercloud
+  hosts: localhost
+  tasks:
+  - name: Create designate user
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack user create designate --password {{ mysql_designate_password }}'
+  - name: Add admin role
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack role add --project service --user designate admin'
+  - name: Create designate service
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack service create dns --name designate --description "Designate DNS Service"'
+  - name: Create  Public endpoint
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack endpoint create --region regionOne designate public https://{{ external_lb_vip }}:9001'
+  - name: Create Internal endpoint
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack endpoint create --region regionOne designate internal http://{{ internal_lb_vip }}:9001'
+  - name: Create Admin enpoint
+    shell: 'source {{ undercloud_rc }} && /usr/bin/openstack endpoint create --region regionOne designate admin http://{{ internal_lb_vip }}:9001'
+

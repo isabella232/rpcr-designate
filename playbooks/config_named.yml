@@ -1,0 +1,68 @@
+---
+
+- name: Update named and rndc settings
+  hosts: Controller
+  become: true
+  tasks:
+  - name: Update /etc/named.conf
+    template:
+      src: templates/named.conf.j2
+      dest: /etc/named.conf
+      owner: root
+      group: named
+      mode: 0640
+  - name: Update /etc/rndc.conf
+    template:
+      src: templates/rndc.conf.j2
+      dest: /etc/rndc.conf
+      owner: named
+      group: named
+      mode: "u=rw,g=r,o=r"
+
+- name: Run rncd-confgen command to gen rndc.key.
+  hosts: Controller[0]
+  become: true
+  tasks:
+  - name: Gen rndc.key 
+    command: rndc-confgen -a
+
+
+- name: rndc.key settings
+  hosts: Controller[0]
+  become: true
+  tasks:
+  - name: pull rndc.key
+    fetch:
+      flat: yes
+      src: /etc/rndc.key
+      dest: /tmp/rndc.key
+
+- name: Set /etc/rndc.key owner and permissions
+  hosts: Controller
+  become: true
+  tasks:
+  - name: push rndc.key
+    copy:
+      src: /tmp/rndc.key
+      dest: /etc/rndc.key
+  - name: set rndc.key perms
+    file:
+      path: /etc/rndc.key
+      owner: named
+      group: named
+      mode: 0600
+  - name: set /var/named perms
+    file:
+      path: /var/named
+      mode: 0770
+  - name: Set selinux boolean for named
+    seboolean:
+      name: named_write_master_zones
+      state: yes
+      persistent: yes
+  - name: Enable and Start named
+    systemd:
+      name: named.service
+      state: restarted
+      enabled: yes
+

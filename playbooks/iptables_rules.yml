@@ -1,0 +1,21 @@
+---
+
+- name: Add iptables rules for Designate
+  hosts: Controller
+  become: yes
+  tasks:
+  - name: Designate MDNS
+    command: /sbin/iptables -I INPUT 67 -p tcp -m multiport --dports 5354 -m state --state NEW -m comment --comment "designate mdns incoming" -j ACCEPT
+  - name: Designate MDNS UDP
+    command: /sbin/iptables -I INPUT 67 -p udp -m multiport --dports 5354 -m state --state NEW -m comment --comment "designate mdns incoming udp" -j ACCEPT
+  - name: Designate RNDS
+    command: /sbin/iptables -I INPUT 67 -p tcp -m multiport --dports 953 -m state --state NEW -m comment --comment "rnds incoming - bind only" -j ACCEPT
+  - name: Designate Bind
+    command: /sbin/iptables -I INPUT 67 -p tcp -m multiport --dports 53 -m state --state NEW -m comment --comment "bind tcp incoming" -j ACCEPT
+  - name: Designate Bind UDP
+    command: /sbin/iptables -I INPUT 67 -p udp -m multiport --dports 53 -m state --state NEW -m comment --comment "bind udp incoming" -j ACCEPT
+  - name: Designate Bind Endpoint
+    command: /sbin/iptables -I INPUT 67 -p tcp -m multiport --dports 9001 -m state --state NEW -m comment --comment "designate endpoint incoming" -j ACCEPT
+  - name: Save iptables changes to /etc/sysconfig
+    command: /usr/libexec/iptables/iptables.init save
+

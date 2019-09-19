@@ -1,0 +1,24 @@
+mysql_root_password: xxxxxxxx
+mysql_designate_password: xxxxxxx
+rabbit_admin: xxxxxxx
+internalapi_vlan: vlanN
+externalnet_vlan: vlanN
+external_lb_vip: fqdn.example.com
+internal_lb_vip: 1.2.3.4
+keystone_admin_vip: 1.2.3.5
+newvar: "{{ 'ansible_' + internalapi_vlan }}"
+externalnet_factname: "{{ 'ansible_' + externalnet_vlan }}"
+controller_routes:
+  controller01:
+    ip: <controller1 public IP>
+    host: <controller1 internal hostname>
+    ns: <controller1 public hostname>
+  controller01:
+    ip: <controller1 public IP>
+    host: <controller1 internal hostname>
+    ns: <controller1 public hostname>
+  controller01:
+    ip: <controller1 public IP>
+    host: <controller1 internal hostname>
+    ns: <controller1 public hostname>
+undercloud_rc: /home/stack/example-stackrc

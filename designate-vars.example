@@ -1,0 +1,21 @@
+mysql_root_password: foo
+mysql_designate_password: foo
+rabbit_admin: foo
+internalapi_vlan: vlan1328 
+externalnet_vlan: vlan1331 
+external_lb_vip: 172.23.232.10
+internal_lb_vip: 172.23.236.61
+keystone_admin_vip: 172.23.216.109
+newvar: "{{ 'ansible_' + internalapi_vlan }}"
+externalnet_factname: "{{ 'ansible_' + externalnet_vlan }}"
+controller_routes:
+  controller01:
+    ip: 172.23.236.51
+    host: 716190-controller01.internalapi.localdomain
+  controller02:
+    ip: 172.23.236.52
+    host: 716191-controller02.internalapi.localdomain
+  controller03:
+    ip: 172.23.236.53
+    host: 716192-controller03.internalapi.localdomain
+undercloud_rc: /home/rack/lab3rc.v3

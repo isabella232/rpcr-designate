@@ -1,0 +1,37 @@
+---
+
+- name: Create designate database 
+  hosts: Controller[0]
+  become: yes
+  tasks:
+  - name: Create designate DB User
+    mysql_db:
+      name: "{{ item }}"
+      state: present
+      login_host: "{{ internal_lb_vip }}"
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+    with_items:
+        - designate
+        - designate_pool_manager
+  - name: Designate database user access
+    mysql_user:
+      login_host: "{{ internal_lb_vip }}"
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      name: designate
+      host: "%"
+      password: "{{ mysql_designate_password }}"
+      priv: 'designate.*:ALL'
+      state: present
+  - name: Designate_pool_manager database user access
+    mysql_user:
+      login_host: "{{ internal_lb_vip }}"
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      name: designate
+      host: "%"
+      password: "{{ mysql_designate_password }}"
+      priv: 'designate_pool_manager.*:ALL'
+      append_privs: yes
+      state: present

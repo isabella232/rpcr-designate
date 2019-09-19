@@ -1,0 +1,19 @@
+---
+
+
+designate_local_dir: /home/stack/mk8s
+designate_remote_dir: /home/heat-admin/mk8s
+
+designate_keystone_auth_url: "http://{{ internal_lb_vip }}:5000/v3"
+
+designate_haproxy_service_configs:
+  - service:
+      haproxy_service_name: designate
+      haproxy_backend_nodes_map: "{{ controller_routes }}"
+      haproxy_backend_port: 9001
+      haproxy_ssl: True
+      haproxy_port: 9001
+      haproxy_balance_type: http
+      haproxy_backend_options:
+        - "httpchk"
+

@@ -1,0 +1,56 @@
+---
+
+- name: Configure Designate 
+  hosts: Controller
+  become: yes
+  tasks:
+  - name: update designate config file
+    ini_file:
+      path: /etc/designate/designate.conf
+      section: "{{ item.section }}"
+      option: "{{ item.option }}"
+      value: "{{ item.value }}"
+    with_items:
+      - { section: 'storage:sqlalchemy', option: connection, value: 'mysql://designate:{{ mysql_designate_password }}@{{ internal_lb_vip }}/designate' }
+      - { section: 'storage:sqlalchemy', option: max_retries, value: -1 }
+      - { section: 'pool_manager_cache:sqlalchemy', option: connection, value: 'mysql://designate:{{ mysql_designate_password }}@{{ internal_lb_vip }}/designate_pool_manager' }
+      - { section: 'pool_manager_cache:sqlalchemy', option: max_retries, value: -1 }
+      - { section: keystone_authtoken, option: auth_url, value: 'http://{{ internal_lb_vip }}:5000/v3' }
+      - { section: keystone_authtoken, option: identity_uri, value: 'http://{{ internal_lb_vip }}:5000' }
+      - { section: keystone_authtoken, option: project_name, value: service }
+      - { section: keystone_authtoken, option: username, value: designate }
+      - { section: keystone_authtoken, option: password, value: "{{ mysql_designate_password }}" }
+      - { section: keystone_authtoken, option: user_domain_id, value: default }
+      - { section: keystone_authtoken, option: project_domain_id, value: default }
+      - { section: keystone_authtoken, option: auth_type, value: password }
+      - { section: DEFAULT, option: transport_url, value: 'rabbit://admin:{{ rabbit_admin }}@{{ controller_routes.controller01.host }}:5672,admin:{{ rabbit_admin }}@{{ controller_routes.controller02.host }}:5672,admin:{{ rabbit_admin }}@{{ controller_routes.controller01.host }}:5672/?ssl=0' }
+      - { section: DEFAULT, option: notification_driver, value: nova.openstack.common.notifier.rpc_notifier }
+      - { section: DEFAULT, option: notification_driver, value: messaging }
+      - { section: DEFAULT, option: notification_topics, value: notifications_designate }
+      - { section: 'service:api', option: api_host, value: "{{vars[newvar].ipv4.address}}" }
+      - { section: 'service:api', option: api_port, value: 9001 }
+      - { section: 'service:api', option: auth_strategy, value: keystone }
+      - { section: 'service:api', option: enable_api_v1, value: True }
+      - { section: 'service:api', option: enabled_extensions_v1, value: "diagnostics, quotas, reports, sync, touch" }
+      - { section: 'service:api', option: enable_api_v2, value: True }
+      - { section: 'service:api', option: enabled_extensions_v2, value: "quotas, reports" }
+      - { section: 'service:api', option: api_base_uri, value: 'https://{{ external_lb_vip }}:9001' }
+      - { section: 'service:worker', option: enabled, value: True }
+      - { section: 'service:sink', option: enabled_notification_handlers, value: "nova_fixed, neutron_floatingip" }
+      - { section: 'handler:nova_fixed', option: notification_topics, value: notifications_designate }
+      - { section: 'handler:nova_fixed', option: control_exchange, value: nova }
+      - { section: 'handler:nova_fixed', option: format, value: "%(display_name)s.%(domain)s" }
+      - { section: 'handler:neutron_floatingip', option: notification_topics, value: notifications_designate }
+      - { section: 'handler:neutron_floatingip', option: control_exchange, value: neutron }
+      - { section: 'handler:neutron_floatingip', option: format, value: "%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(domain)s" }
+
+- name: "Add pools.yaml"
+  hosts: Controller[0]
+  become: true
+  tasks:
+  - name: pool.yaml from template
+    template:
+      src: templates/pools.yaml.j2
+      dest: /etc/designate/pools.yaml
+
+
